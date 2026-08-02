@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>高中題庫測驗</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF1EC;
+    --paper:#FFFFFF;
+    --ink:#20282B;
+    --sub-ink:#5B6660;
+    --rule:#CBD5CE;
+    --rule-strong:#9FAEA5;
+
+    --eng:#33499A;
+    --eng-soft:#E7EAF6;
+    --math:#6B3FA0;
+    --math-soft:#EFE6F6;
+    --sci:#1B7A5C;
+    --sci-soft:#E1F1EA;
+
+    --wrong:#B23A2E;
+    --wrong-soft:#FBEAE7;
+    --correct:#1B7A5C;
+    --correct-soft:#E1F1EA;
+
+    --stamp-red:#B23A2E;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--rule) 1px, transparent 1px) 0 0/100% 34px,
+      var(--bg);
+    color:var(--ink);
+    font-family:'Noto Sans TC','Noto Serif TC',sans-serif;
+    min-height:100vh;
+    padding:28px 16px 60px;
+  }
+
+  .wrap{max-width:720px;margin:0 auto;}
+
+  .ticket{
+    background:var(--paper);
+    border:1.5px solid var(--ink);
+    border-radius:2px;
+    box-shadow:5px 5px 0 rgba(32,40,43,0.08);
+    padding:0;
+    margin-bottom:22px;
+    overflow:hidden;
+  }
+  .ticket-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 20px 12px;
+    border-bottom:1px dashed var(--rule-strong);
+    gap:10px;
+  }
+  .ticket-title{
+    font-family:'Noto Serif TC',serif;
+    font-weight:900;
+    font-size:1.5rem;
+    letter-spacing:.08em;
+  }
+  .ticket-sub{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.7rem;
+    color:var(--sub-ink);
+    letter-spacing:.03em;
+    margin-top:2px;
+  }
+  .ticket-badge{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.7rem;
+    border:1px solid var(--ink);
+    padding:4px 10px;
+    border-radius:20px;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+  .ticket-fields{
+    display:flex;
+    padding:10px 20px 16px;
+    gap:0;
+  }
+  .field{flex:1;padding-right:16px;}
+  .field:last-child{padding-right:0;text-align:right;}
+  .field-label{font-size:.68rem;color:var(--sub-ink);letter-spacing:.1em;}
+  .field-value{font-family:'IBM Plex Mono',monospace;font-size:1rem;font-weight:600;margin-top:2px;}
+
+  .subjects{display:flex;gap:10px;margin-bottom:22px;}
+  .subj-tab{
+    flex:1;position:relative;background:var(--paper);
+    border:1.5px solid var(--ink);border-radius:2px;
+    padding:16px 10px 14px;text-align:center;cursor:pointer;
+    font-family:'Noto Serif TC',serif;font-weight:700;font-size:1rem;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .subj-tab:hover{transform:translateY(-2px);box-shadow:3px 4px 0 rgba(32,40,43,0.15);}
+  .subj-tab small{display:block;font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:.66rem;color:var(--sub-ink);margin-top:4px;}
+  .subj-tab[data-s="en"]{border-color:var(--eng);}
+  .subj-tab[data-s="math"]{border-color:var(--math);}
+  .subj-tab[data-s="sci"]{border-color:var(--sci);}
+  .subj-tab[data-s="en"] span.dot{background:var(--eng);}
+  .subj-tab[data-s="math"] span.dot{background:var(--math);}
+  .subj-tab[data-s="sci"] span.dot{background:var(--sci);}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle;}
+
+  .quiz-card{
+    background:var(--paper);border:1.5px solid var(--ink);border-radius:2px;
+    box-shadow:5px 5px 0 rgba(32,40,43,0.08);padding:22px 22px 20px;display:none;
+  }
+  .quiz-card.active{display:block;animation:fadein .25s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  .quiz-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;flex-wrap:wrap;gap:6px;}
+  .quiz-progress{font-family:'IBM Plex Mono',monospace;font-size:.78rem;color:var(--sub-ink);}
+  .quiz-score{font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:600;}
+
+  .q-text{font-family:'Noto Serif TC',serif;font-weight:700;font-size:1.12rem;line-height:1.6;margin-bottom:18px;}
+  .q-num{font-family:'IBM Plex Mono',monospace;font-weight:600;margin-right:6px;}
+
+  .options{display:flex;flex-direction:column;gap:10px;}
+  .opt{
+    display:flex;align-items:flex-start;gap:10px;
+    border:1.3px solid var(--rule-strong);border-radius:3px;padding:11px 14px;
+    cursor:pointer;background:var(--paper);
+    transition:background .12s ease, border-color .12s ease;
+  }
+  .opt:hover:not(.locked){border-color:var(--ink);background:#FAFBF9;}
+  .opt-label{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--sub-ink);flex-shrink:0;}
+  .opt.correct-pick{background:var(--correct-soft);border-color:var(--correct);}
+  .opt.wrong-pick{background:var(--wrong-soft);border-color:var(--wrong);}
+  .opt.reveal-correct{background:var(--correct-soft);border-color:var(--correct);}
+
+  .feedback{margin-top:16px;padding:12px 14px;border-radius:3px;font-size:.92rem;line-height:1.55;display:none;}
+  .feedback.show{display:block;}
+  .feedback.ok{background:var(--correct-soft);color:var(--correct);border:1px solid var(--correct);}
+  .feedback.bad{background:var(--wrong-soft);color:var(--wrong);border:1px solid var(--wrong);}
+  .feedback b{font-family:'IBM Plex Mono',monospace;}
+  .steps{margin:8px 0 0;padding-left:20px;}
+  .steps li{margin-bottom:4px;}
+
+  .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;flex-wrap:wrap;}
+  .btn{
+    font-family:'Noto Sans TC',sans-serif;font-weight:700;font-size:.9rem;
+    padding:10px 22px;border-radius:3px;border:1.5px solid var(--ink);
+    background:var(--ink);color:var(--paper);cursor:pointer;
+  }
+  .btn:disabled{opacity:.35;cursor:not-allowed;}
+  .btn.ghost{background:transparent;color:var(--ink);}
+
+  .result{display:none;text-align:center;padding:10px 10px 6px;}
+  .result.active{display:block;animation:fadein .3s ease;}
+  .stamp{
+    width:118px;height:118px;border:5px solid var(--stamp-red);border-radius:50%;
+    color:var(--stamp-red);display:flex;flex-direction:column;align-items:center;justify-content:center;
+    margin:6px auto 18px;transform:rotate(-8deg) scale(0.4);opacity:0;
+    animation:stampin .45s cubic-bezier(.2,1.6,.4,1) .1s forwards;font-family:'Noto Serif TC',serif;
+  }
+  @keyframes stampin{to{transform:rotate(-8deg) scale(1);opacity:1;}}
+  .stamp .num{font-size:2.1rem;font-weight:900;line-height:1;}
+  .stamp .lbl{font-size:.7rem;letter-spacing:.15em;margin-top:2px;}
+  .result-title{font-family:'Noto Serif TC',serif;font-weight:700;font-size:1.15rem;margin-bottom:6px;}
+  .result-sub{font-family:'IBM Plex Mono',monospace;font-size:.8rem;color:var(--sub-ink);margin-bottom:22px;}
+  .review-list{text-align:left;margin:0 0 22px;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;max-height:360px;overflow-y:auto;}
+  .review-item{border:1px solid var(--rule-strong);border-radius:3px;padding:10px 12px;font-size:.85rem;}
+  .review-item.miss{border-color:var(--wrong);background:var(--wrong-soft);}
+  .review-item .rq{font-weight:700;margin-bottom:3px;}
+  .review-item .ra{font-family:'IBM Plex Mono',monospace;font-size:.78rem;color:var(--sub-ink);}
+  .result-actions{display:flex;gap:10px;justify-content:center;}
+
+  .hint{text-align:center;color:var(--sub-ink);font-size:.82rem;margin-top:6px;}
+
+  @media (max-width:520px){
+    .subjects{flex-direction:column;}
+    .ticket-fields{flex-direction:column;gap:8px;}
+    .field:last-child{text-align:left;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="ticket">
+    <div class="ticket-top">
+      <div>
+        <div class="ticket-title">高中題庫測驗</div>
+        <div class="ticket-sub">SUBJECT QUIZ TICKET · 數學無限出題並附詳解，答錯即顯示正解</div>
+      </div>
+      <div class="ticket-badge" id="statusBadge">請選擇科目</div>
+    </div>
+    <div class="ticket-fields">
+      <div class="field"><div class="field-label">科　目</div><div class="field-value" id="fieldSubject">—</div></div>
+      <div class="field"><div class="field-label">題　數</div><div class="field-value" id="fieldCount">—</div></div>
+      <div class="field"><div class="field-label">得　分</div><div class="field-value" id="fieldScore">—</div></div>
+    </div>
+  </div>
+
+  <div class="subjects" id="subjectSelect">
+    <div class="subj-tab" data-s="en"><span class="dot"></span>英語<small>ENGLISH · 10 題精選</small></div>
+    <div class="subj-tab" data-s="math"><span class="dot"></span>數學<small>MATH · 無限出題＋詳解</small></div>
+    <div class="subj-tab" data-s="sci"><span class="dot"></span>理化<small>SCIENCE · 10 題精選</small></div>
+  </div>
+  <div class="hint" id="topHint">點選上方科目卡片開始作答</div>
+
+  <div class="quiz-card" id="quizCard">
+    <div class="quiz-head">
+      <div class="quiz-progress" id="progressText">第 1 / 10 題</div>
+      <div class="quiz-score" id="scoreText">答對 0</div>
+    </div>
+    <div class="q-text"><span class="q-num" id="qNum">Q1.</span><span id="qText"></span></div>
+    <div class="options" id="optionsBox"></div>
+    <div class="feedback" id="feedbackBox"></div>
+    <div class="actions">
+      <button class="btn ghost" id="btnRestart">重新選科目</button>
+      <button class="btn ghost" id="btnFinish" style="display:none;">結束並看成績</button>
+      <button class="btn" id="btnNext" disabled>下一題</button>
+    </div>
+  </div>
+
+  <div class="result" id="resultCard">
+    <div class="stamp" id="stampBox"><div class="num" id="stampNum">0</div><div class="lbl" id="stampLbl">/ 10</div></div>
+    <div class="result-title" id="resultTitle">測驗完成</div>
+    <div class="result-sub" id="resultSub"></div>
+    <ul class="review-list" id="reviewList"></ul>
+    <div class="result-actions">
+      <button class="btn ghost" id="btnAgain">再測一次</button>
+      <button class="btn" id="btnSwitch">換科目</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ===================== 固定題庫（英語 / 理化） ===================== */
+const QUESTIONS = {
+  en: { name:"英語",
+    list:[
+      {q:'She ___ to school every day.', opts:['go','goes','going','gone'], a:1, ex:'主詞為第三人稱單數 she，一般現在式動詞需加 s，故為 goes。'},
+      {q:'"Abundant" 意思最接近下列何者？', opts:['scarce（稀少）','plentiful（豐富的）','tiny（微小）','broken（破損）'], a:1, ex:'abundant 意為「豐富的、充裕的」，同義字為 plentiful。'},
+      {q:'Neither of the students ___ ready.', opts:['are','is','were','be'], a:1, ex:'neither of + 複數名詞，動詞仍視為單數，故用 is。'},
+      {q:'She is afraid ___ spiders.', opts:['of','with','at','for'], a:0, ex:'be afraid of 為固定搭配，意為「害怕⋯」。'},
+      {q:'The book ___ by millions of readers.', opts:['reads','is read','read','has read'], a:1, ex:'書本「被閱讀」為被動語態，故為 is read。'},
+      {q:'By next year, I ___ here for ten years.', opts:['will live','have lived','will have lived','lived'], a:2, ex:'未來完成式表示「到未來某時間點為止已完成」，故為 will have lived。'},
+      {q:'"Generous" 的反義字為？', opts:['stingy（小氣的）','kind（親切的）','wealthy（富有的）','patient（有耐心的）'], a:0, ex:'generous 意為「慷慨的」，反義字為 stingy（小氣的）。'},
+      {q:'下列拼字何者正確？', opts:['neccessary','necessary','necesary','neccesary'], a:1, ex:'正確拼法為 necessary，注意只有一個 c、兩個 s。'},
+      {q:'Hardly had he arrived ___ it started raining.', opts:['than','when','then','that'], a:1, ex:'Hardly...when 為固定句型，表示「一⋯就⋯」。'},
+      {q:'"Break the ice" 這句慣用語的意思是？', opts:['打破窗戶','破壞冰塊','化解尷尬氣氛','取消計畫'], a:2, ex:'break the ice 指在初次見面等場合「打破沉默、化解尷尬」。'}
+    ]
+  },
+  sci:{ name:"理化",
+    list:[
+      {q:'水的化學式為？', opts:['CO₂','H₂O','O₂','NaCl'], a:1, ex:'水由 2 個氫原子與 1 個氧原子組成，化學式為 H₂O。'},
+      {q:'牛頓第一運動定律又稱為？', opts:['慣性定律','作用力反作用力定律','萬有引力定律','能量守恆定律'], a:0, ex:'牛頓第一運動定律描述物體維持原狀態的傾向，稱為慣性定律。'},
+      {q:'力、質量、加速度的關係式為？', opts:['F=ma','F=mv','F=m/a','F=a/m'], a:0, ex:'牛頓第二運動定律：F = m × a（力等於質量乘以加速度）。'},
+      {q:'氧的元素符號為？', opts:['Ox','O','Og','On'], a:1, ex:'氧（Oxygen）的元素符號為大寫字母 O。'},
+      {q:'酸與鹼反應會產生什麼？', opts:['氣體與水','鹽與水','沉澱物','僅產生熱'], a:1, ex:'酸鹼中和反應的通式為：酸＋鹼 → 鹽＋水。'},
+      {q:'光在真空中的速度約為？', opts:['3×10⁵ m/s','3×10⁶ m/s','3×10⁸ m/s','3×10¹⁰ m/s'], a:2, ex:'真空中光速約為 3×10⁸ 公尺/秒。'},
+      {q:'電流的國際單位為？', opts:['伏特(V)','安培(A)','歐姆(Ω)','瓦特(W)'], a:1, ex:'電流的單位為安培（A），伏特是電壓單位，歐姆是電阻單位。'},
+      {q:'原子核主要由下列何者組成？', opts:['質子與電子','中子與電子','質子與中子','電子與光子'], a:2, ex:'原子核由帶正電的質子與不帶電的中子組成，電子則環繞於核外。'},
+      {q:'能量守恆定律說明能量會如何變化？', opts:['能量會憑空產生','能量只會轉換形式，總量不變','能量會逐漸消失','能量只能被創造不能被消滅'], a:1, ex:'能量守恆定律指能量可轉換形式，但總量維持不變。'},
+      {q:'pH 值小於 7 代表溶液呈現？', opts:['酸性','中性','鹼性','無法判斷'], a:0, ex:'pH<7 為酸性，pH=7 為中性，pH>7 為鹼性。'}
+    ]
+  },
+  math:{ name:"數學" }
+};
+
+/* ===================== 數學無限出題產生器 ===================== */
+function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=b;b=a%b;a=t;}return a||1;}
+function term(n, suffix){
+  if(n===0) return '';
+  const sign = n>0 ? ' + ' : ' - ';
+  const abs = Math.abs(n);
+  const coef = (suffix && abs===1) ? '' : String(abs);
+  return `${sign}${coef}${suffix}`;
+}
+function fracStr(num,den){
+  const g=gcd(num,den);
+  let n=num/g, d=den/g;
+  if(d<0){n=-n;d=-d;}
+  return d===1? `${n}` : `${n}/${d}`;
+}
+
+function genLinear(){
+  const a = randInt(2,9);
+  let x = randInt(-9,9); if(x===0) x=3;
+  const b = randInt(-15,15);
+  const c = a*x + b;
+  const q = `解方程式：${a}x${term(b,'')} = ${c}，x = ?`;
+  const correct = `${x}`;
+  const steps = [
+    `移項，把常數項移到等號右邊：${a}x = ${c} ${b>=0?'-':'+'} ${Math.abs(b)}`,
+    `化簡右邊：${a}x = ${a*x}`,
+    `兩邊同除以 ${a}：x = ${x}`
+  ];
+  const distractors = [x+1, x-1, -x].map(String);
+  return {q, correct, steps, distractors};
+}
+
+function genQuadraticFactor(){
+  let r1, r2;
+  do{
+    r1 = randInt(-6,6); if(r1===0) r1=2;
+    r2 = randInt(-6,6); if(r2===0) r2=-3;
+  } while(r1===r2 || r1===-r2);
+  const b = -(r1+r2);
+  const c = r1*r2;
+  const poly = `x²${term(b,'x')}${term(c,'')}`;
+  const q = `解方程式：${poly} = 0，x = ?`;
+  const sorted = [r1,r2].sort((x,y)=>x-y);
+  const correct = `x = ${sorted[0]} 或 x = ${sorted[1]}`;
+  const steps = [
+    `因式分解：${poly} = (x - (${r1})) × (x - (${r2})) = 0`,
+    `所以 x - (${r1}) = 0 或 x - (${r2}) = 0`,
+    `解得 x = ${r1} 或 x = ${r2}`
+  ];
+  const alt = [ [r1, -r2], [-r1, r2], [r1+1, r2] ];
+  const distractors = alt.map(p=>{
+    const s=[p[0],p[1]].sort((x,y)=>x-y);
+    return `x = ${s[0]} 或 x = ${s[1]}`;
+  });
+  return {q, correct, steps, distractors};
+}
+
+function genSlope(){
+  let x1=randInt(-5,5), x2=randInt(-5,5);
+  while(x2===x1) x2=randInt(-5,5);
+  const y1=randInt(-5,5), y2=randInt(-5,5);
+  const dy=y2-y1, dx=x2-x1;
+  const correct = fracStr(dy,dx);
+  const q = `已知兩點 (${x1}, ${y1}) 與 (${x2}, ${y2})，其連線斜率為？`;
+  const steps=[
+    `斜率公式：m = (y₂ - y₁) / (x₂ - x₁)`,
+    `代入數值：m = (${y2} - (${y1})) / (${x2} - (${x1})) = ${dy} / ${dx}`,
+    `化簡：m = ${correct}`
+  ];
+  const distractors = [ fracStr(-dy,dx), fracStr(dx,dy), fracStr(dy,dx+1===0?1:dx+1) ];
+  return {q, correct, steps, distractors};
+}
+
+function genTrig(){
+  const table = [
+    {deg:0, sin:'0', cos:'1', tan:'0'},
+    {deg:30, sin:'1/2', cos:'√3/2', tan:'√3/3'},
+    {deg:45, sin:'√2/2', cos:'√2/2', tan:'1'},
+    {deg:60, sin:'√3/2', cos:'1/2', tan:'√3'},
+    {deg:90, sin:'1', cos:'0', tan:'不存在'}
+  ];
+  const row = table[randInt(0,table.length-1)];
+  const funcs=['sin','cos','tan'];
+  const f = funcs[randInt(0,2)];
+  const correct = row[f];
+  const q = `${f} ${row.deg}° 的值為？`;
+  const steps=[`${row.deg}° 為常考特殊角，需熟記其三角函數值表`, `依特殊角表：${f} ${row.deg}° = ${correct}`];
+  const distractors = table.filter(r=>r.deg!==row.deg).slice(0,3).map(r=>r[f]);
+  return {q, correct, steps, distractors};
+}
+
+function genExponent(){
+  const base=randInt(2,4);
+  const m=randInt(1,4), n=randInt(1,4);
+  const correctVal = Math.pow(base,m+n);
+  const q = `${base}^${m} × ${base}^${n} 的值為？`;
+  const steps=[
+    `同底數冪相乘，指數相加：${base}^${m} × ${base}^${n} = ${base}^${m+n}`,
+    `計算：${base}^${m+n} = ${correctVal}`
+  ];
+  const distractors = [Math.pow(base,m*n), Math.pow(base,m+n+1), Math.pow(base,m)+Math.pow(base,n)].map(String);
+  return {q, correct:String(correctVal), steps, distractors};
+}
+
+function genLog(){
+  const base=randInt(2,5);
+  const n=randInt(1,4);
+  const value=Math.pow(base,n);
+  const q = `log 底 ${base}、真數 ${value} 的對數值（即 log${base}(${value})）為？`;
+  const steps=[
+    `log${base}(${value}) 表示「${base} 的幾次方等於 ${value}」`,
+    `因為 ${base}^${n} = ${value}`,
+    `所以 log${base}(${value}) = ${n}`
+  ];
+  const distractors = [n+1,n-1,n*2].map(String);
+  return {q, correct:String(n), steps, distractors};
+}
+
+function genArithmeticSeq(){
+  const a1=randInt(-5,10);
+  let d=randInt(1,6); if(Math.random()<0.5) d=-d;
+  const n=randInt(4,9);
+  const correct=a1+(n-1)*d;
+  const q=`等差數列首項 a₁=${a1}，公差 d=${d}，求第 ${n} 項 aₙ？`;
+  const steps=[
+    `等差數列通式：aₙ = a₁ + (n-1)d`,
+    `代入：aₙ = ${a1} + (${n}-1) × ${d} = ${a1} + ${(n-1)*d}`,
+    `計算：aₙ = ${correct}`
+  ];
+  const distractors = [correct+d, correct-d, a1+n*d].map(String);
+  return {q, correct:String(correct), steps, distractors};
+}
+
+function genDiceProb(){
+  const options = [
+    {desc:'出現偶數點', favorable:3},
+    {desc:'出現奇數點', favorable:3},
+    {desc:'出現點數大於 4', favorable:2},
+    {desc:'出現點數小於 3', favorable:2},
+    {desc:'出現 6 的倍數', favorable:1}
+  ];
+  const pick= options[randInt(0,options.length-1)];
+  const correct = fracStr(pick.favorable,6);
+  const q=`投擲一顆公正骰子一次，${pick.desc}的機率為？`;
+  const steps=[
+    `骰子共有 6 種等可能結果`,
+    `符合「${pick.desc}」的結果有 ${pick.favorable} 種`,
+    `機率 = ${pick.favorable}/6 = ${correct}`
+  ];
+  const distractors = [fracStr(pick.favorable+1,6), fracStr(6-pick.favorable,6), fracStr(pick.favorable,12)];
+  return {q, correct, steps, distractors};
+}
+
+function genPythagoras(){
+  const triples=[[3,4,5],[6,8,10],[5,12,13],[8,15,17],[9,12,15]];
+  const t = triples[randInt(0,triples.length-1)];
+  const correct = t[2];
+  const q = `直角三角形兩股長分別為 ${t[0]} 與 ${t[1]}，求斜邊長？`;
+  const steps=[
+    `畢氏定理：斜邊² = 股₁² + 股₂²`,
+    `代入：斜邊² = ${t[0]}² + ${t[1]}² = ${t[0]*t[0]} + ${t[1]*t[1]} = ${t[0]*t[0]+t[1]*t[1]}`,
+    `開根號：斜邊 = √${t[0]*t[0]+t[1]*t[1]} = ${correct}`
+  ];
+  const distractors = [correct+1, correct-1, t[0]+t[1]].map(String);
+  return {q, correct:String(correct), steps, distractors};
+}
+
+function genVertex(){
+  const h=randInt(-5,5);
+  const k=randInt(-6,6);
+  const q = `已知函數 y = (x ${h>=0?'-':'+'} ${Math.abs(h)})² ${k>=0?'+':'-'} ${Math.abs(k)}，求其最小值？`;
+  const correct = k;
+  const steps=[
+    `此為開口向上的拋物線，標準式 y=(x-h)²+k 的頂點座標為 (${h}, ${k})`,
+    `開口向上時，頂點的 y 值即為函數最小值`,
+    `所以最小值為 ${k}`
+  ];
+  const distractors = [h, k+1, k-1].map(String);
+  return {q, correct:String(correct), steps, distractors};
+}
+
+const GENS = [genLinear, genQuadraticFactor, genSlope, genTrig, genExponent, genLog, genArithmeticSeq, genDiceProb, genPythagoras, genVertex];
+
+function generateMathQuestion(){
+  const gen = GENS[randInt(0,GENS.length-1)];
+  const raw = gen();
+  let distractors = [...new Set(raw.distractors.map(String))].filter(d=>d!==raw.correct).slice(0,3);
+  let filler = 1;
+  while(distractors.length<3){
+    distractors.push(raw.correct+'?'.repeat(filler));
+    filler++;
+  }
+  const opts = [raw.correct, ...distractors];
+  for(let i=opts.length-1;i>0;i--){
+    const j = randInt(0,i);
+    [opts[i],opts[j]] = [opts[j],opts[i]];
+  }
+  const idx = opts.indexOf(raw.correct);
+  return {q:raw.q, opts, a:idx, steps:raw.steps};
+}
+
+/* ===================== 測驗流程 ===================== */
+let state = { subj:null, mode:'fixed', idx:0, score:0, answered:false, wrongList:[], completed:0, currentItem:null };
+
+const subjectSelect = document.getElementById('subjectSelect');
+const quizCard = document.getElementById('quizCard');
+const resultCard = document.getElementById('resultCard');
+const topHint = document.getElementById('topHint');
+const fieldSubject = document.getElementById('fieldSubject');
+const fieldCount = document.getElementById('fieldCount');
+const fieldScore = document.getElementById('fieldScore');
+const statusBadge = document.getElementById('statusBadge');
+const btnFinish = document.getElementById('btnFinish');
+
+document.querySelectorAll('.subj-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=> startQuiz(tab.dataset.s));
+});
+document.getElementById('btnNext').addEventListener('click', nextQuestion);
+document.getElementById('btnRestart').addEventListener('click', backToSelect);
+document.getElementById('btnFinish').addEventListener('click', showResult);
+document.getElementById('btnAgain').addEventListener('click', ()=> startQuiz(state.subj));
+document.getElementById('btnSwitch').addEventListener('click', backToSelect);
+
+function startQuiz(subjKey){
+  state = { subj:subjKey, mode: subjKey==='math'?'infinite':'fixed', idx:0, score:0, answered:false, wrongList:[], completed:0, currentItem:null };
+  subjectSelect.style.display='none';
+  topHint.style.display='none';
+  resultCard.classList.remove('active');
+  quizCard.classList.add('active');
+
+  const s = QUESTIONS[subjKey];
+  fieldSubject.textContent = s.name;
+  fieldCount.textContent = state.mode==='infinite' ? '無限' : s.list.length + ' 題';
+  fieldScore.textContent = '0';
+  statusBadge.textContent = '作答中';
+  btnFinish.style.display = state.mode==='infinite' ? 'inline-block' : 'none';
+  renderQuestion();
+}
+
+function backToSelect(){
+  quizCard.classList.remove('active');
+  resultCard.classList.remove('active');
+  subjectSelect.style.display='flex';
+  topHint.style.display='block';
+  fieldSubject.textContent='—';
+  fieldCount.textContent='—';
+  fieldScore.textContent='—';
+  statusBadge.textContent='請選擇科目';
+}
+
+function renderQuestion(){
+  const s = QUESTIONS[state.subj];
+  let item;
+  if(state.mode === 'infinite'){
+    item = generateMathQuestion();
+  } else {
+    item = s.list[state.idx];
+  }
+  state.currentItem = item;
+  state.answered = false;
+
+  document.getElementById('progressText').textContent = state.mode==='infinite'
+    ? `第 ${state.idx+1} 題（無限出題，可隨時結束）`
+    : `第 ${state.idx+1} / ${s.list.length} 題`;
+  document.getElementById('scoreText').textContent = `答對 ${state.score}`;
+  document.getElementById('qNum').textContent = `Q${state.idx+1}.`;
+  document.getElementById('qText').textContent = item.q;
+
+  const box = document.getElementById('optionsBox');
+  box.innerHTML='';
+  const labels=['A','B','C','D'];
+  item.opts.forEach((opt,i)=>{
+    const div = document.createElement('div');
+    div.className='opt';
+    div.innerHTML = `<span class="opt-label">(${labels[i]})</span><span>${opt}</span>`;
+    div.addEventListener('click', ()=> selectAnswer(i));
+    box.appendChild(div);
+  });
+
+  const fb = document.getElementById('feedbackBox');
+  fb.classList.remove('show','ok','bad');
+  fb.innerHTML='';
+  document.getElementById('btnNext').disabled = true;
+}
+
+function selectAnswer(i){
+  if(state.answered) return;
+  state.answered = true;
+  state.completed++;
+
+  const item = state.currentItem;
+  const opts = document.querySelectorAll('.opt');
+  opts.forEach(o=>o.classList.add('locked'));
+  const fb = document.getElementById('feedbackBox');
+  const labels=['A','B','C','D'];
+
+  if(i === item.a){
+    opts[i].classList.add('correct-pick');
+    state.score++;
+    fb.classList.add('show','ok');
+    fb.innerHTML = `<b>✓ 答對了！</b>`;
+  } else {
+    opts[i].classList.add('wrong-pick');
+    opts[item.a].classList.add('reveal-correct');
+    fb.classList.add('show','bad');
+    let body = `<b>✗ 答錯了</b>　正確答案是 (${labels[item.a]}) ${item.opts[item.a]}`;
+    if(item.steps && item.steps.length){
+      body += `<div style="margin-top:8px;font-weight:700;">解題步驟：</div><ol class="steps">` +
+        item.steps.map(st=>`<li>${st}</li>`).join('') + `</ol>`;
+    } else if(item.ex){
+      body += `<br>${item.ex}`;
+    }
+    fb.innerHTML = body;
+    const correctText = item.opts ? item.opts[item.a] : '';
+    state.wrongList.push({q:item.q, correct:`(${labels[item.a]}) ${correctText}`});
+  }
+
+  document.getElementById('scoreText').textContent = `答對 ${state.score}`;
+  fieldScore.textContent = String(state.score);
+  document.getElementById('btnNext').disabled = false;
+}
+
+function nextQuestion(){
+  const s = QUESTIONS[state.subj];
+  if(state.mode === 'infinite'){
+    state.idx++;
+    renderQuestion();
+  } else {
+    if(state.idx < s.list.length - 1){
+      state.idx++;
+      renderQuestion();
+    } else {
+      showResult();
+    }
+  }
+}
+
+function showResult(){
+  const s = QUESTIONS[state.subj];
+  quizCard.classList.remove('active');
+  resultCard.classList.add('active');
+  statusBadge.textContent = '測驗完成';
+
+  const total = state.completed;
+  document.getElementById('stampNum').textContent = state.score;
+  document.getElementById('stampLbl').textContent = '/ ' + total;
+  document.getElementById('resultTitle').textContent = `${s.name}測驗結果`;
+
+  const rate = total>0 ? Math.round((state.score / total) * 100) : 0;
+  let comment;
+  if(total===0) comment = '尚未作答任何一題。';
+  else if(rate === 100) comment = '全對，非常扎實！';
+  else if(rate >= 80) comment = '表現很好，再加把勁就完美了。';
+  else if(rate >= 60) comment = '基礎穩定，把錯的地方再複習一次。';
+  else comment = '別氣餒，把下方錯題複習清楚再挑戰一次。';
+  document.getElementById('resultSub').textContent = `共作答 ${total} 題，正確率 ${rate}%　${comment}`;
+
+  const list = document.getElementById('reviewList');
+  list.innerHTML='';
+  if(state.wrongList.length === 0){
+    const li = document.createElement('li');
+    li.className='review-item';
+    li.textContent = total===0 ? '快去挑戰第一題吧！' : '這回合沒有錯題，太厲害了！';
+    list.appendChild(li);
+  } else {
+    state.wrongList.forEach(w=>{
+      const li = document.createElement('li');
+      li.className='review-item miss';
+      li.innerHTML = `<div class="rq">${w.q}</div><div class="ra">正解：${w.correct}</div>`;
+      list.appendChild(li);
+    });
+  }
+}
+</script>
+</body>
+</html>
