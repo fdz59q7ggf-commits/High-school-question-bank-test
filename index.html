@@ -191,7 +191,7 @@
     <div class="ticket-top">
       <div>
         <div class="ticket-title">高中題庫測驗</div>
-        <div class="ticket-sub">SUBJECT QUIZ TICKET · 數學無限出題並附詳解，答錯即顯示正解</div>
+        <div class="ticket-sub">SUBJECT QUIZ TICKET · 英語/理化隨機抽題，數學無限出題並附詳解，答錯即顯示正解</div>
       </div>
       <div class="ticket-badge" id="statusBadge">請選擇科目</div>
     </div>
@@ -203,9 +203,9 @@
   </div>
 
   <div class="subjects" id="subjectSelect">
-    <div class="subj-tab" data-s="en"><span class="dot"></span>英語<small>ENGLISH · 10 題精選</small></div>
+    <div class="subj-tab" data-s="en"><span class="dot"></span>英語<small>ENGLISH · 題庫20題，隨機抽10題</small></div>
     <div class="subj-tab" data-s="math"><span class="dot"></span>數學<small>MATH · 無限出題＋詳解</small></div>
-    <div class="subj-tab" data-s="sci"><span class="dot"></span>理化<small>SCIENCE · 10 題精選</small></div>
+    <div class="subj-tab" data-s="sci"><span class="dot"></span>理化<small>SCIENCE · 題庫20題，隨機抽10題</small></div>
   </div>
   <div class="hint" id="topHint">點選上方科目卡片開始作答</div>
 
@@ -251,7 +251,17 @@ const QUESTIONS = {
       {q:'"Generous" 的反義字為？', opts:['stingy（小氣的）','kind（親切的）','wealthy（富有的）','patient（有耐心的）'], a:0, ex:'generous 意為「慷慨的」，反義字為 stingy（小氣的）。'},
       {q:'下列拼字何者正確？', opts:['neccessary','necessary','necesary','neccesary'], a:1, ex:'正確拼法為 necessary，注意只有一個 c、兩個 s。'},
       {q:'Hardly had he arrived ___ it started raining.', opts:['than','when','then','that'], a:1, ex:'Hardly...when 為固定句型，表示「一⋯就⋯」。'},
-      {q:'"Break the ice" 這句慣用語的意思是？', opts:['打破窗戶','破壞冰塊','化解尷尬氣氛','取消計畫'], a:2, ex:'break the ice 指在初次見面等場合「打破沉默、化解尷尬」。'}
+      {q:'"Break the ice" 這句慣用語的意思是？', opts:['打破窗戶','破壞冰塊','化解尷尬氣氛','取消計畫'], a:2, ex:'break the ice 指在初次見面等場合「打破沉默、化解尷尬」。'},
+      {q:'If I ___ rich, I would travel around the world.', opts:['am','was','were','be'], a:2, ex:'與現在事實相反的假設語氣，be 動詞一律用 were，即使主詞是 I。'},
+      {q:'This is the boy ___ dog was lost.', opts:['who','whom','whose','which'], a:2, ex:'表示所有格關係，需用 whose 連接「男孩的狗」。'},
+      {q:'This book is ___ than that one.', opts:['interesting','more interesting','most interesting','the most interesting'], a:1, ex:'兩者比較用比較級，多音節形容詞用 more + 原級，故為 more interesting。'},
+      {q:'I have lived here ___ 2010.', opts:['for','since','from','at'], a:1, ex:'since 接一個時間點，表示「從某時間點開始」，since 2010 意為「自2010年起」。'},
+      {q:'Despite ___ hard, he failed the exam.', opts:['study','studying','studied','to study'], a:1, ex:'despite 後面接動名詞（V-ing），故為 studying。'},
+      {q:'"Ancient" 的反義字為？', opts:['modern（現代的）','historic（歷史的）','old（舊的）','antique（古董的）'], a:0, ex:'ancient 意為「古老的」，反義字為 modern（現代的）。'},
+      {q:'The meeting has been postponed ___ next Monday.', opts:['until','since','during','by'], a:0, ex:'postpone until 表示「延後到⋯」，為固定搭配。'},
+      {q:'Each of the students has ___ own locker.', opts:['their','his or her','its','my'], a:1, ex:'each of + 複數名詞，指代詞仍需視為單數，正式用法為 his or her。'},
+      {q:'By the time we arrived, the movie ___ already started.', opts:['has','have','had','was'], a:2, ex:'過去完成式表示「過去某動作發生前已完成的事」，故為 had started。'},
+      {q:'"Hit the books" 這句慣用語的意思是？', opts:['丟書','認真讀書','打架','整理書架'], a:1, ex:'hit the books 是口語慣用語，意思是「用功讀書」。'}
     ]
   },
   sci:{ name:"理化",
@@ -265,7 +275,17 @@ const QUESTIONS = {
       {q:'電流的國際單位為？', opts:['伏特(V)','安培(A)','歐姆(Ω)','瓦特(W)'], a:1, ex:'電流的單位為安培（A），伏特是電壓單位，歐姆是電阻單位。'},
       {q:'原子核主要由下列何者組成？', opts:['質子與電子','中子與電子','質子與中子','電子與光子'], a:2, ex:'原子核由帶正電的質子與不帶電的中子組成，電子則環繞於核外。'},
       {q:'能量守恆定律說明能量會如何變化？', opts:['能量會憑空產生','能量只會轉換形式，總量不變','能量會逐漸消失','能量只能被創造不能被消滅'], a:1, ex:'能量守恆定律指能量可轉換形式，但總量維持不變。'},
-      {q:'pH 值小於 7 代表溶液呈現？', opts:['酸性','中性','鹼性','無法判斷'], a:0, ex:'pH<7 為酸性，pH=7 為中性，pH>7 為鹼性。'}
+      {q:'pH 值小於 7 代表溶液呈現？', opts:['酸性','中性','鹼性','無法判斷'], a:0, ex:'pH<7 為酸性，pH=7 為中性，pH>7 為鹼性。'},
+      {q:'化學反應中，催化劑的主要作用是？', opts:['提高反應物濃度','加快反應速率但本身不改變','使反應停止','增加生成物質量'], a:1, ex:'催化劑能降低反應所需活化能、加快反應速率，反應前後本身不會被消耗或改變。'},
+      {q:'元素週期表中，同一族（直行）元素通常具有？', opts:['相同的原子量','相似的化學性質','相同的顏色','相同的密度'], a:1, ex:'同一族元素最外層電子數相同，因此化學性質相似。'},
+      {q:'在同一介質中，波速固定時，波長與頻率的關係為？', opts:['成正比','成反比','無關','相等'], a:1, ex:'波速 = 波長 × 頻率，波速固定時，波長越長頻率越低，兩者成反比。'},
+      {q:'靜電現象中，同性電荷會如何作用？', opts:['互相吸引','互相排斥','沒有作用力','先吸引後排斥'], a:1, ex:'電荷「同性相斥，異性相吸」為基本靜電原理。'},
+      {q:'下列何者屬於化合物？', opts:['空氣','食鹽水','鹽（NaCl）','鐵砂與硫粉混合物'], a:2, ex:'化合物是由不同元素以固定比例透過化學鍵結合而成，如 NaCl；其餘選項皆為混合物。'},
+      {q:'水從液態變成固態的過程稱為？', opts:['汽化','凝固','昇華','熔化'], a:1, ex:'液態變固態稱為凝固，固態變液態才是熔化。'},
+      {q:'歐姆定律的公式為？', opts:['V=IR','V=I/R','V=R/I','V=I+R'], a:0, ex:'歐姆定律：電壓 = 電流 × 電阻，即 V=IR。'},
+      {q:'細胞進行呼吸作用時，葡萄糖與氧反應主要生成？', opts:['澱粉與水','二氧化碳、水並釋放能量','氧氣與葡萄糖','僅產生熱量無氣體'], a:1, ex:'呼吸作用中葡萄糖與氧反應，生成二氧化碳與水，並釋放能量供細胞使用。'},
+      {q:'分子與原子的關係為？', opts:['分子比原子小','分子由一個或多個原子組成','原子由分子組成','兩者為同一種粒子'], a:1, ex:'分子是由一個或多個原子透過化學鍵結合而成的粒子。'},
+      {q:'加速度的國際單位為？', opts:['m/s','m/s²','N','kg'], a:1, ex:'加速度定義為速度變化率，單位為公尺/秒平方（m/s²）。'}
     ]
   },
   math:{ name:"數學" }
@@ -473,6 +493,30 @@ function generateMathQuestion(){
   return {q:raw.q, opts, a:idx, steps:raw.steps};
 }
 
+/* ===================== 固定題庫：隨機抽題＋洗牌選項 ===================== */
+const ROUND_SIZE = 10;
+
+function shuffleArray(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = randInt(0,i);
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function shuffleOptions(item){
+  const labels = item.opts.map((opt,i)=>({opt, isCorrect:i===item.a}));
+  const shuffled = shuffleArray(labels);
+  const newA = shuffled.findIndex(x=>x.isCorrect);
+  return { q:item.q, opts:shuffled.map(x=>x.opt), a:newA, ex:item.ex };
+}
+
+function buildRandomSession(fullList){
+  const picked = shuffleArray(fullList).slice(0, Math.min(ROUND_SIZE, fullList.length));
+  return picked.map(shuffleOptions);
+}
+
 /* ===================== 測驗流程 ===================== */
 let state = { subj:null, mode:'fixed', idx:0, score:0, answered:false, wrongList:[], completed:0, currentItem:null };
 
@@ -503,8 +547,11 @@ function startQuiz(subjKey){
   quizCard.classList.add('active');
 
   const s = QUESTIONS[subjKey];
+  if(state.mode === 'fixed'){
+    s.sessionList = buildRandomSession(s.list);
+  }
   fieldSubject.textContent = s.name;
-  fieldCount.textContent = state.mode==='infinite' ? '無限' : s.list.length + ' 題';
+  fieldCount.textContent = state.mode==='infinite' ? '無限' : s.sessionList.length + ' 題（隨機抽題）';
   fieldScore.textContent = '0';
   statusBadge.textContent = '作答中';
   btnFinish.style.display = state.mode==='infinite' ? 'inline-block' : 'none';
@@ -528,14 +575,14 @@ function renderQuestion(){
   if(state.mode === 'infinite'){
     item = generateMathQuestion();
   } else {
-    item = s.list[state.idx];
+    item = s.sessionList[state.idx];
   }
   state.currentItem = item;
   state.answered = false;
 
   document.getElementById('progressText').textContent = state.mode==='infinite'
     ? `第 ${state.idx+1} 題（無限出題，可隨時結束）`
-    : `第 ${state.idx+1} / ${s.list.length} 題`;
+    : `第 ${state.idx+1} / ${s.sessionList.length} 題`;
   document.getElementById('scoreText').textContent = `答對 ${state.score}`;
   document.getElementById('qNum').textContent = `Q${state.idx+1}.`;
   document.getElementById('qText').textContent = item.q;
@@ -600,7 +647,7 @@ function nextQuestion(){
     state.idx++;
     renderQuestion();
   } else {
-    if(state.idx < s.list.length - 1){
+    if(state.idx < s.sessionList.length - 1){
       state.idx++;
       renderQuestion();
     } else {
