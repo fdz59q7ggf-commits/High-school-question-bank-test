@@ -22,6 +22,9 @@
     --sci:#1B7A5C;
     --sci-soft:#E1F1EA;
 
+    --trivia:#B5651D;
+    --trivia-soft:#FBEEDD;
+
     --wrong:#B23A2E;
     --wrong-soft:#FBEAE7;
     --correct:#1B7A5C;
@@ -106,9 +109,11 @@
   .subj-tab[data-s="en"]{border-color:var(--eng);}
   .subj-tab[data-s="math"]{border-color:var(--math);}
   .subj-tab[data-s="sci"]{border-color:var(--sci);}
+  .subj-tab[data-s="trivia"]{border-color:var(--trivia);}
   .subj-tab[data-s="en"] span.dot{background:var(--eng);}
   .subj-tab[data-s="math"] span.dot{background:var(--math);}
   .subj-tab[data-s="sci"] span.dot{background:var(--sci);}
+  .subj-tab[data-s="trivia"] span.dot{background:var(--trivia);}
   .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle;}
 
   .quiz-card{
@@ -177,6 +182,24 @@
 
   .hint{text-align:center;color:var(--sub-ink);font-size:.82rem;margin-top:6px;}
 
+  .loading-card{
+    background:var(--paper);border:1.5px solid var(--ink);border-radius:2px;
+    box-shadow:5px 5px 0 rgba(32,40,43,0.08);padding:44px 22px;display:none;
+    text-align:center;
+  }
+  .loading-card.active{display:block;animation:fadein .25s ease;}
+  .loading-dots{
+    font-family:'IBM Plex Mono',monospace;font-size:.85rem;color:var(--sub-ink);
+    letter-spacing:.05em;
+  }
+  .loading-dots::after{
+    content:'';
+    animation:dots 1.2s steps(4,end) infinite;
+  }
+  @keyframes dots{
+    0%{content:'';} 25%{content:'.';} 50%{content:'..';} 75%{content:'...';} 100%{content:'';}
+  }
+
   @media (max-width:520px){
     .subjects{flex-direction:column;}
     .ticket-fields{flex-direction:column;gap:8px;}
@@ -206,8 +229,13 @@
     <div class="subj-tab" data-s="en"><span class="dot"></span>英語<small>ENGLISH · 題庫20題，隨機抽10題</small></div>
     <div class="subj-tab" data-s="math"><span class="dot"></span>數學<small>MATH · 無限出題＋詳解</small></div>
     <div class="subj-tab" data-s="sci"><span class="dot"></span>理化<small>SCIENCE · 題庫20題，隨機抽10題</small></div>
+    <div class="subj-tab" data-s="trivia"><span class="dot"></span>科普英文<small>TRIVIA · 免費線上題庫，即時抓題</small></div>
   </div>
-  <div class="hint" id="topHint">點選上方科目卡片開始作答</div>
+  <div class="hint" id="topHint">點選上方科目卡片開始作答（科普英文為趣味關卡，非課綱內容，需連網）</div>
+
+  <div class="loading-card" id="loadingCard">
+    <div class="loading-dots">正在連線科普英文題庫</div>
+  </div>
 
   <div class="quiz-card" id="quizCard">
     <div class="quiz-head">
@@ -288,7 +316,8 @@ const QUESTIONS = {
       {q:'加速度的國際單位為？', opts:['m/s','m/s²','N','kg'], a:1, ex:'加速度定義為速度變化率，單位為公尺/秒平方（m/s²）。'}
     ]
   },
-  math:{ name:"數學" }
+  math:{ name:"數學" },
+  trivia:{ name:"科普英文" }
 };
 
 /* ===================== 數學無限出題產生器 ===================== */
@@ -517,11 +546,31 @@ function buildRandomSession(fullList){
   return picked.map(shuffleOptions);
 }
 
+/* ===================== 科普趣味關卡：從免費開放題庫即時抓題 ===================== */
+async function fetchTriviaQuestions(n){
+  const url = `https://opentdb.com/api.php?amount=${n}&category=17&type=multiple&encode=url3986`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('網路連線失敗');
+  const data = await res.json();
+  if(data.response_code !== 0 || !data.results || data.results.length === 0){
+    throw new Error('題庫暫時無法取得題目，請稍後再試');
+  }
+  return data.results.map(r=>{
+    const q = decodeURIComponent(r.question);
+    const correct = decodeURIComponent(r.correct_answer);
+    const incorrect = r.incorrect_answers.map(x=>decodeURIComponent(x));
+    const opts = shuffleArray([correct, ...incorrect]);
+    const a = opts.indexOf(correct);
+    return { q, opts, a, ex:'題目來源：Open Trivia Database（免費開放科普英文題庫）。' };
+  });
+}
+
 /* ===================== 測驗流程 ===================== */
 let state = { subj:null, mode:'fixed', idx:0, score:0, answered:false, wrongList:[], completed:0, currentItem:null };
 
 const subjectSelect = document.getElementById('subjectSelect');
 const quizCard = document.getElementById('quizCard');
+const loadingCard = document.getElementById('loadingCard');
 const resultCard = document.getElementById('resultCard');
 const topHint = document.getElementById('topHint');
 const fieldSubject = document.getElementById('fieldSubject');
@@ -540,25 +589,54 @@ document.getElementById('btnAgain').addEventListener('click', ()=> startQuiz(sta
 document.getElementById('btnSwitch').addEventListener('click', backToSelect);
 
 function startQuiz(subjKey){
-  state = { subj:subjKey, mode: subjKey==='math'?'infinite':'fixed', idx:0, score:0, answered:false, wrongList:[], completed:0, currentItem:null };
+  let mode = 'fixed';
+  if(subjKey === 'math') mode = 'infinite';
+  if(subjKey === 'trivia') mode = 'trivia';
+
+  state = { subj:subjKey, mode, idx:0, score:0, answered:false, wrongList:[], completed:0, currentItem:null };
   subjectSelect.style.display='none';
   topHint.style.display='none';
   resultCard.classList.remove('active');
-  quizCard.classList.add('active');
+  quizCard.classList.remove('active');
 
   const s = QUESTIONS[subjKey];
-  if(state.mode === 'fixed'){
+  fieldSubject.textContent = s.name;
+
+  if(mode === 'trivia'){
+    fieldCount.textContent = '連線中…';
+    fieldScore.textContent = '0';
+    statusBadge.textContent = '連線中';
+    btnFinish.style.display = 'inline-block';
+    loadingCard.classList.add('active');
+    fetchTriviaQuestions(ROUND_SIZE).then(list=>{
+      loadingCard.classList.remove('active');
+      s.sessionList = list;
+      fieldCount.textContent = list.length + ' 題（即時線上題庫）';
+      statusBadge.textContent = '作答中';
+      quizCard.classList.add('active');
+      renderQuestion();
+    }).catch(err=>{
+      loadingCard.classList.remove('active');
+      statusBadge.textContent = '連線失敗';
+      alert('科普英文題庫連線失敗：' + err.message + '\n請確認網路連線後再試一次。');
+      backToSelect();
+    });
+    return;
+  }
+
+  if(mode === 'fixed'){
     s.sessionList = buildRandomSession(s.list);
   }
-  fieldSubject.textContent = s.name;
-  fieldCount.textContent = state.mode==='infinite' ? '無限' : s.sessionList.length + ' 題（隨機抽題）';
+  fieldCount.textContent = mode==='infinite' ? '無限' : s.sessionList.length + ' 題（隨機抽題）';
   fieldScore.textContent = '0';
   statusBadge.textContent = '作答中';
-  btnFinish.style.display = state.mode==='infinite' ? 'inline-block' : 'none';
+  btnFinish.style.display = mode==='infinite' ? 'inline-block' : 'none';
+  quizCard.classList.add('active');
   renderQuestion();
 }
 
 function backToSelect(){
+  loadingCard.classList.remove('active');
   quizCard.classList.remove('active');
   resultCard.classList.remove('active');
   subjectSelect.style.display='flex';
